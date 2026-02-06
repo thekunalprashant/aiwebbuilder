@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "baseUrl": ".",
+    "paths": {
+      "@aiwebbuilder/schema": ["packages/schema/src"],
+      "@aiwebbuilder/utils": ["packages/utils/src"],
+      "@aiwebbuilder/build-engine": ["packages/build-engine/src"]
+    }
+  }
+}

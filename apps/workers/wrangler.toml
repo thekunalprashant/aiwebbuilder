@@ -1,0 +1,9 @@
+name = "aiwebbuilder-workers"
+main = "src/lead-capture.ts"
+compatibility_date = "2025-01-15"
+
+[vars]
+ALLOWED_DOMAINS = "example.com"
+
+[triggers]
+crons = ["*/30 * * * *"]

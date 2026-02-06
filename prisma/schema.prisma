@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  tenantId    String   @unique @map("tenant_id")
+  email       String   @unique
+  passwordHash String? @map("password_hash")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  sites       Site[]
+  leads       Lead[]
+  assets      Asset[]
+  domains     Domain[]
+
+  @@index([tenantId])
+}
+
+model Site {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  ownerId     String   @map("owner_id")
+  name        String
+  subdomain   String   @unique
+  status      String   @default("draft")
+  buildPath   String?  @map("build_path")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  owner       User        @relation(fields: [ownerId], references: [id])
+  schemas     SiteSchema[]
+  versions    SiteVersion[]
+  domains     Domain[]
+  leads       Lead[]
+  buildLogs   BuildLog[]
+
+  @@index([tenantId])
+  @@index([createdAt])
+}
+
+model SiteSchema {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  siteId      String   @map("site_id")
+  schemaJson  Json     @map("schema_json")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id])
+
+  @@index([tenantId])
+  @@index([siteId])
+}
+
+model SiteVersion {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  siteId      String   @map("site_id")
+  version     Int
+  schemaJson  Json     @map("schema_json")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id])
+
+  @@unique([siteId, version])
+  @@index([tenantId])
+  @@index([siteId])
+}
+
+model Domain {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  siteId      String   @map("site_id")
+  domain      String   @unique
+  isPrimary   Boolean  @default(false) @map("is_primary")
+  verified    Boolean  @default(false)
+  verificationMethod String @default("txt") @map("verification_method")
+  verificationToken  String @map("verification_token")
+  lastChecked DateTime? @map("last_checked")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  site  Site @relation(fields: [siteId], references: [id])
+  owner User @relation(fields: [tenantId], references: [tenantId])
+
+  @@index([tenantId])
+  @@index([siteId])
+  @@index([domain])
+}
+
+model Lead {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  siteId      String   @map("site_id")
+  encryptedEmail String @map("encrypted_email")
+  encryptedPhone String? @map("encrypted_phone")
+  payload     Json
+  hashedIp    String   @map("hashed_ip")
+  referrer    String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  site  Site @relation(fields: [siteId], references: [id])
+  owner User @relation(fields: [tenantId], references: [tenantId])
+
+  @@index([tenantId])
+  @@index([siteId])
+  @@index([createdAt])
+}
+
+model Asset {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  ownerId     String   @map("owner_id")
+  siteId      String?  @map("site_id")
+  r2Key       String   @map("r2_key")
+  mimeType    String   @map("mime_type")
+  sizeBytes   Int      @map("size_bytes")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  owner User @relation(fields: [ownerId], references: [id])
+
+  @@index([tenantId])
+}
+
+model BuildLog {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  siteId      String   @map("site_id")
+  status      String
+  details     Json
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id])
+
+  @@index([tenantId])
+  @@index([siteId])
+  @@index([createdAt])
+}
